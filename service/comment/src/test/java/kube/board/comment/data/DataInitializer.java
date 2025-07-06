@@ -1,11 +1,10 @@
-package kuke.board.article.data;
+package kube.board.comment.data;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import kube.board.article.ArticleApplication;
-import kube.board.article.entity.Article;
+import kube.board.comment.CommentApplication;
+import kube.board.comment.entity.Comment;
 import kuke.board.common.snowflake.Snowflake;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,14 +12,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@SpringBootTest(classes = ArticleApplication.class)
+@SpringBootTest(classes = CommentApplication.class)
 public class DataInitializer {
     @PersistenceContext
     EntityManager entityManager;
@@ -63,50 +59,23 @@ public class DataInitializer {
 
     void insert() {
         transactionTemplate.executeWithoutResult(status -> {
+            Comment prev = null;
             for(int i = 0; i < BULK_INSERT_SIZE; i++) {
-                Article article = Article.create(
+
+                Comment comment = Comment.create(
                         snowflake.nextId(),
-                        "title" + i,
-                        "content" + i,
+                        "content",
+                        i % 2 == 0 ? null : prev.getCommentId(),
                         1L,
                         1L
                 );
-                entityManager.persist(article);
+                prev = comment;
+
+
+                entityManager.persist(comment);
             }
         });
     }
     
-    @Test
-    @DisplayName("성능 향상 방법")        
-    void batchInsert(int batchIndex) {
-        List<Article> articles = new ArrayList<>(BULK_INSERT_SIZE);
-        int start = batchIndex * BULK_INSERT_SIZE;
-        for (int i = 0; i < BULK_INSERT_SIZE; i++) {
-            int idx = start + i;
-            articles.add(
-                    Article.create(
-                            snowflake.nextId(),
-                            "title" + idx,
-                            "content" + idx,
-                            1L,
-                            1L
-                    )
-            );
-            System.out.println("idx = " + idx);
 
-        }
-        jdbcTemplate.batchUpdate(
-                "INSERT INTO article (article_id, title, content, user_id, board_id) VALUES (?, ?, ?, ?, ?)",
-                articles,
-                BULK_INSERT_SIZE,
-                (ps, article) -> {
-                    ps.setLong(1, article.getArticleId());
-                    ps.setString(2, article.getTitle());
-                    ps.setString(3, article.getContent());
-                    ps.setLong(4, article.getBoardId());
-                    ps.setLong(5, article.getWriterId());
-                }
-        );
-        
-    }
 }
