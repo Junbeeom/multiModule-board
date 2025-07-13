@@ -30,7 +30,7 @@ public class ViewApiTest {
         for (int i = 0; i < 10; i++) {
             executorService.submit(() -> {
                 restClient.post()
-                        .uri("/v1/article-views/articles/{articleId}/users/{userId}", 3L, 1L)
+                        .uri("/v1/article-views/articles/{articleId}/users/{userId}", 4L, 1L)
                         .retrieve();
                         latch.countDown();
 
