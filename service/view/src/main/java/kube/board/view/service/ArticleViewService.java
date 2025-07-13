@@ -17,7 +17,7 @@ public class ArticleViewService {
         if (count % BACKUP_UP_BACH_SIZE == 0) {
             articleViewCountBackUpProcessor.backUp(articleId, count);
         }
-        return articleViewCountRepository.increaase(articleId);
+        return count;
     }
 
     public Long count(Long articleId) {
